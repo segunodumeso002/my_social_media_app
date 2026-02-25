@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { resolveS3ImageUrl } from '../utils/storage';
 
 const getCommentText = (comment) => comment?.text || comment?.comment || comment?.content || '';
 
@@ -21,6 +22,7 @@ const formatDate = (value) => {
 
 export default function Post({ post }) {
   const { user } = useAuth();
+  const [imageSrc, setImageSrc] = useState(post.image || '');
   const [likes, setLikes] = useState(post.likes || 0);
   const [liked, setLiked] = useState(false);
   const [liking, setLiking] = useState(false);
@@ -29,6 +31,23 @@ export default function Post({ post }) {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [editingCommentKey, setEditingCommentKey] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveImage = async () => {
+      const nextSrc = await resolveS3ImageUrl(post.image || '');
+      if (isMounted) {
+        setImageSrc(nextSrc);
+      }
+    };
+
+    resolveImage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [post.image]);
 
   const handleLike = async () => {
     if (liking) return;
@@ -161,7 +180,7 @@ export default function Post({ post }) {
         </div>
       </div>
       <p className="mb-3">{post.content}</p>
-      {post.image && <img src={post.image} alt="Post" className="w-full rounded-lg mb-3" />}
+      {imageSrc && <img src={imageSrc} alt="Post" className="w-full rounded-lg mb-3" />}
       <div className="flex items-center gap-4 mb-3">
         <button onClick={handleLike} disabled={liking} className={`flex items-center gap-1 ${liked ? 'text-red-500' : ''} disabled:opacity-60`}>
           <Heart size={20} fill={liked ? 'currentColor' : 'none'} />

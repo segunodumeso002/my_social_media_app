@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import { User } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { uploadImageToS3 } from '../utils/storage';
+import { resolveS3ImageUrl, uploadImageToS3 } from '../utils/storage';
 
 export default function Profile() {
   const { userId } = useParams();
@@ -21,6 +21,7 @@ export default function Profile() {
   const [followUpdating, setFollowUpdating] = useState(false);
   const [bioInput, setBioInput] = useState('');
   const [profilePictureInput, setProfilePictureInput] = useState('');
+  const [profileImageSrc, setProfileImageSrc] = useState('');
   const isOwnProfile = Boolean(user?.userId && userId === user.userId);
 
   useEffect(() => {
@@ -32,6 +33,23 @@ export default function Profile() {
       setEditing(true);
     }
   }, [isOwnProfile, searchParams]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveImage = async () => {
+      const nextSrc = await resolveS3ImageUrl(profile?.profilePicture || '');
+      if (isMounted) {
+        setProfileImageSrc(nextSrc);
+      }
+    };
+
+    resolveImage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profile?.profilePicture]);
 
   const loadProfile = async () => {
     setLoading(true);
@@ -165,8 +183,8 @@ export default function Profile() {
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            {profile.profilePicture ? (
-              <img src={profile.profilePicture} alt={profile.username} className="w-20 h-20 rounded-full shrink-0 object-cover" />
+            {profileImageSrc ? (
+              <img src={profileImageSrc} alt={profile.username} className="w-20 h-20 rounded-full shrink-0 object-cover" />
             ) : (
               <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                 <User size={40} />
