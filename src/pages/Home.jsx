@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -13,9 +13,11 @@ export default function Home() {
   const [profileNeedsSetup, setProfileNeedsSetup] = useState(false);
   const [dismissProfilePrompt, setDismissProfilePrompt] = useState(false);
 
-  useEffect(() => {
-    loadPosts();
-  }, []);
+  const normalizeValue = (value) => (typeof value === 'string' ? value.trim().toLowerCase() : '');
+  const getPostOwnerId = (post) =>
+    post?.userId || post?.userID || post?.ownerId || post?.ownerID || post?.authorId || post?.authorID || '';
+  const getPostOwnerUsername = (post) =>
+    post?.username || post?.userName || post?.ownerUsername || post?.author || '';
 
   useEffect(() => {
     if (user?.userId) {
@@ -23,7 +25,17 @@ export default function Home() {
     }
   }, [user?.userId]);
 
+  useEffect(() => {
+    if (!user?.userId && !user?.username) {
+      setPosts([]);
+      return;
+    }
+
+    loadPosts();
+  }, [user?.userId, user?.username]);
+
   const loadPosts = async () => {
+    setLoading(true);
     try {
       const data = await api.getPosts();
       setPosts(data);
@@ -60,6 +72,20 @@ export default function Home() {
     setPosts((prev) => prev.filter((item) => item.postId !== postId));
   };
 
+  const visiblePosts = useMemo(() => {
+    const currentUserId = user?.userId || '';
+    const currentUsername = normalizeValue(user?.username);
+
+    return posts.filter((post) => {
+      const ownerId = getPostOwnerId(post);
+      const ownerUsername = normalizeValue(getPostOwnerUsername(post));
+      return (
+        (!!currentUserId && !!ownerId && ownerId === currentUserId) ||
+        (!!currentUsername && !!ownerUsername && ownerUsername === currentUsername)
+      );
+    });
+  }, [posts, user?.userId, user?.username]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -90,7 +116,7 @@ export default function Home() {
           <p className="text-center mt-8">Loading...</p>
         ) : (
           <div className="space-y-4 mt-6">
-            {posts.map((post) => (
+            {visiblePosts.map((post) => (
               <Post
                 key={post.postId}
                 post={post}
@@ -98,6 +124,9 @@ export default function Home() {
                 onPostDeleted={handlePostDeleted}
               />
             ))}
+            {visiblePosts.length === 0 && (
+              <p className="text-center text-gray-500 py-8">No posts yet for this account. Create your first post.</p>
+            )}
           </div>
         )}
       </div>
