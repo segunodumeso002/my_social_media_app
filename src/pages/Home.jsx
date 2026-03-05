@@ -48,6 +48,18 @@ export default function Home() {
     setPosts((prev) => [newPost, ...prev]);
   };
 
+  const handlePostUpdated = (updatedPost) => {
+    if (!updatedPost?.postId) return;
+    setPosts((prev) =>
+      prev.map((item) => (item.postId === updatedPost.postId ? { ...item, ...updatedPost } : item))
+    );
+  };
+
+  const handlePostDeleted = (postId) => {
+    if (!postId) return;
+    setPosts((prev) => prev.filter((item) => item.postId !== postId));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -79,7 +91,12 @@ export default function Home() {
         ) : (
           <div className="space-y-4 mt-6">
             {posts.map((post) => (
-              <Post key={post.postId} post={post} />
+              <Post
+                key={post.postId}
+                post={post}
+                onPostUpdated={handlePostUpdated}
+                onPostDeleted={handlePostDeleted}
+              />
             ))}
           </div>
         )}

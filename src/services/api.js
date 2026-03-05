@@ -76,6 +76,56 @@ export const api = {
     }
   },
 
+  updatePost: async (postId, content, image, createdAt) => {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await put({
+        apiName: API_NAME,
+        path: `/posts/${postId}`,
+        options: {
+          body: {
+            content,
+            image,
+            createdAt
+          },
+          headers
+        }
+      });
+      const data = await response.response;
+      const jsonData = await data.body.json();
+      return jsonData;
+    } catch (error) {
+      const backendMessage = error?.response?.data?.message || error?.message;
+      if (!isNotFoundError(error)) {
+        console.error('Error updating post:', backendMessage || error);
+      }
+      return null;
+    }
+  },
+
+  deletePost: async (postId, createdAt) => {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await del({
+        apiName: API_NAME,
+        path: `/posts/${postId}`,
+        options: {
+          body: { createdAt },
+          headers
+        }
+      });
+      const data = await response.response;
+      const jsonData = await data.body.json();
+      return jsonData;
+    } catch (error) {
+      const backendMessage = error?.response?.data?.message || error?.message;
+      if (!isNotFoundError(error)) {
+        console.error('Error deleting post:', backendMessage || error);
+      }
+      return null;
+    }
+  },
+
   likePost: async (postId, createdAt) => {
     try {
       const headers = await getAuthHeaders();

@@ -20,12 +20,25 @@ const formatDate = (value) => {
   return date.toLocaleString();
 };
 
-export default function Post({ post }) {
+const normalizeValue = (value) => (typeof value === 'string' ? value.trim().toLowerCase() : '');
+
+const getPostOwnerId = (post) =>
+  post?.userId || post?.userID || post?.ownerId || post?.ownerID || post?.authorId || post?.authorID || '';
+
+const getPostOwnerUsername = (post) =>
+  post?.username || post?.userName || post?.ownerUsername || post?.author || '';
+
+export default function Post({ post, onPostUpdated, onPostDeleted }) {
   const { user } = useAuth();
   const [imageSrc, setImageSrc] = useState(post.image || '');
+  const [postContent, setPostContent] = useState(post.content || '');
   const [likes, setLikes] = useState(post.likes || 0);
   const [liked, setLiked] = useState(false);
   const [liking, setLiking] = useState(false);
+  const [postDeleting, setPostDeleting] = useState(false);
+  const [postEditing, setPostEditing] = useState(false);
+  const [postSaving, setPostSaving] = useState(false);
+  const [postEditContent, setPostEditContent] = useState(post.content || '');
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState(post.comments || []);
   const [commentSubmitting, setCommentSubmitting] = useState(false);
@@ -48,6 +61,21 @@ export default function Post({ post }) {
       isMounted = false;
     };
   }, [post.image]);
+
+  useEffect(() => {
+    setPostContent(post.content || '');
+    if (!postEditing) {
+      setPostEditContent(post.content || '');
+    }
+  }, [post.content, postEditing]);
+
+  const currentUserId = user?.userId || '';
+  const postOwnerId = getPostOwnerId(post);
+  const currentUsername = normalizeValue(user?.username);
+  const postOwnerUsername = normalizeValue(getPostOwnerUsername(post));
+  const isOwnPost =
+    (!!postOwnerId && !!currentUserId && postOwnerId === currentUserId) ||
+    (!!postOwnerUsername && !!currentUsername && postOwnerUsername === currentUsername);
 
   const handleLike = async () => {
     if (liking) return;
@@ -170,16 +198,127 @@ export default function Post({ post }) {
     }
   };
 
+  const handleStartPostEdit = () => {
+    setPostEditContent(postContent || '');
+    setPostEditing(true);
+  };
+
+  const handleCancelPostEdit = () => {
+    setPostEditContent(postContent || '');
+    setPostEditing(false);
+  };
+
+  const handleSavePostEdit = async () => {
+    const trimmedContent = postEditContent.trim();
+    if (!trimmedContent) {
+      toast.error('Post content cannot be empty');
+      return;
+    }
+
+    setPostSaving(true);
+    try {
+      const updated = await api.updatePost(post.postId, trimmedContent, post.image || '', post.createdAt);
+      if (!updated) {
+        throw new Error('Failed to update post');
+      }
+
+      const nextPost = {
+        ...post,
+        ...updated,
+        content: updated?.content || trimmedContent
+      };
+
+      setPostContent(nextPost.content);
+      setPostEditing(false);
+      onPostUpdated?.(nextPost);
+      toast.success('Post updated');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update post');
+      console.error(err);
+    }
+    setPostSaving(false);
+  };
+
+  const handleDeletePost = async () => {
+    if (postDeleting) return;
+
+    const confirmed = window.confirm('Delete this post? This action cannot be undone.');
+    if (!confirmed) return;
+
+    setPostDeleting(true);
+    try {
+      const deleted = await api.deletePost(post.postId, post.createdAt);
+      if (!deleted) {
+        throw new Error('Failed to delete post');
+      }
+
+      onPostDeleted?.(post.postId);
+      toast.success('Post deleted');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to delete post');
+      console.error(err);
+    }
+    setPostDeleting(false);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-gray-200"></div>
-        <div>
+        <div className="flex-1">
           <p className="font-semibold">{post.username}</p>
           <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
         </div>
+        {isOwnPost && !postEditing && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleStartPostEdit}
+              className="text-xs text-blue-600 hover:text-blue-700"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={handleDeletePost}
+              disabled={postDeleting}
+              className="text-xs text-red-500 hover:text-red-600 disabled:opacity-60"
+            >
+              {postDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        )}
       </div>
-      <p className="mb-3">{post.content}</p>
+      {postEditing ? (
+        <div className="mb-3 space-y-2">
+          <textarea
+            value={postEditContent}
+            onChange={(e) => setPostEditContent(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            rows="3"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSavePostEdit}
+              disabled={postSaving}
+              className="px-3 py-1 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-60"
+            >
+              {postSaving ? 'Saving...' : 'Save'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelPostEdit}
+              disabled={postSaving}
+              className="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="mb-3">{postContent}</p>
+      )}
       {imageSrc && <img src={imageSrc} alt="Post" className="w-full rounded-lg mb-3" />}
       <div className="flex items-center gap-4 mb-3">
         <button onClick={handleLike} disabled={liking} className={`flex items-center gap-1 ${liked ? 'text-red-500' : ''} disabled:opacity-60`}>

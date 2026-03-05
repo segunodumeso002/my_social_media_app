@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:us-east-1:055849630195:table/social-media-notifications",
+        "arn:aws:dynamodb:us-east-1:055849630195:table/social-media-posts",
+        "arn:aws:dynamodb:us-east-1:055849630195:table/social-media-users"
+      ]
+    }
+  ]
+}
