@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { resolveS3ImageUrl } from '../utils/storage';
+
+const profileImageCache = new Map();
 
 const getCommentText = (comment) => comment?.text || comment?.comment || comment?.content || '';
 
@@ -28,9 +30,13 @@ const getPostOwnerId = (post) =>
 const getPostOwnerUsername = (post) =>
   post?.username || post?.userName || post?.ownerUsername || post?.author || '';
 
+const getPostOwnerImage = (post) =>
+  post?.profilePicture || post?.profilePic || post?.userProfilePicture || post?.avatar || post?.avatarUrl || '';
+
 export default function Post({ post, onPostUpdated, onPostDeleted }) {
   const { user } = useAuth();
   const [imageSrc, setImageSrc] = useState(post.image || '');
+  const [authorImageSrc, setAuthorImageSrc] = useState('');
   const [postContent, setPostContent] = useState(post.content || '');
   const [likes, setLikes] = useState(post.likes || 0);
   const [liked, setLiked] = useState(false);
@@ -61,6 +67,70 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
       isMounted = false;
     };
   }, [post.image]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveAuthorImage = async () => {
+      const directImage = getPostOwnerImage(post);
+      if (directImage) {
+        const resolved = await resolveS3ImageUrl(directImage);
+        if (isMounted) {
+          setAuthorImageSrc(resolved);
+        }
+        return;
+      }
+
+      const ownerId = getPostOwnerId(post);
+      if (!ownerId) {
+        if (isMounted) {
+          setAuthorImageSrc('');
+        }
+        return;
+      }
+
+      if (profileImageCache.has(ownerId)) {
+        if (isMounted) {
+          setAuthorImageSrc(profileImageCache.get(ownerId) || '');
+        }
+        return;
+      }
+
+      try {
+        const profile = await api.getProfile(ownerId);
+        const profilePicture = profile?.profilePicture || '';
+        const resolved = profilePicture ? await resolveS3ImageUrl(profilePicture) : '';
+        profileImageCache.set(ownerId, resolved || '');
+        if (isMounted) {
+          setAuthorImageSrc(resolved || '');
+        }
+      } catch {
+        profileImageCache.set(ownerId, '');
+        if (isMounted) {
+          setAuthorImageSrc('');
+        }
+      }
+    };
+
+    resolveAuthorImage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    post?.postId,
+    post?.userId,
+    post?.userID,
+    post?.ownerId,
+    post?.ownerID,
+    post?.authorId,
+    post?.authorID,
+    post?.profilePicture,
+    post?.profilePic,
+    post?.userProfilePicture,
+    post?.avatar,
+    post?.avatarUrl
+  ]);
 
   useEffect(() => {
     setPostContent(post.content || '');
@@ -264,7 +334,13 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+        {authorImageSrc ? (
+          <img src={authorImageSrc} alt={post.username || 'User'} className="w-10 h-10 rounded-full object-cover" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <User size={18} className="text-gray-500" />
+          </div>
+        )}
         <div className="flex-1">
           <p className="font-semibold">{post.username}</p>
           <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
