@@ -33,6 +33,9 @@ const getPostOwnerUsername = (post) =>
 const getPostOwnerImage = (post) =>
   post?.profilePicture || post?.profilePic || post?.userProfilePicture || post?.avatar || post?.avatarUrl || '';
 
+const getProfileImage = (profile) =>
+  profile?.profilePicture || profile?.profilePic || profile?.avatar || profile?.avatarUrl || profile?.image || '';
+
 export default function Post({ post, onPostUpdated, onPostDeleted }) {
   const { user } = useAuth();
   const [imageSrc, setImageSrc] = useState(post.image || '');
@@ -82,33 +85,65 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
       }
 
       const ownerId = getPostOwnerId(post);
-      if (!ownerId) {
+      const ownerUsername = getPostOwnerUsername(post);
+      const currentUsername = normalizeValue(user?.username);
+      const postUsername = normalizeValue(ownerUsername);
+      const identifiers = [ownerId, ownerUsername].filter(Boolean);
+
+      if (!identifiers.length) {
+        // If post lacks owner identifiers but appears to be mine, reuse current profile.
+        if (postUsername && currentUsername && postUsername === currentUsername && user?.userId) {
+          identifiers.push(user.userId);
+        }
+      }
+
+      if (!identifiers.length) {
         if (isMounted) {
           setAuthorImageSrc('');
         }
         return;
       }
 
-      if (profileImageCache.has(ownerId)) {
-        if (isMounted) {
-          setAuthorImageSrc(profileImageCache.get(ownerId) || '');
-        }
-        return;
-      }
+      for (const identifier of identifiers) {
+        const cacheKey = String(identifier);
+        if (!cacheKey) continue;
 
-      try {
-        const profile = await api.getProfile(ownerId);
-        const profilePicture = profile?.profilePicture || '';
+        if (profileImageCache.has(cacheKey)) {
+          const cached = profileImageCache.get(cacheKey) || '';
+          if (isMounted) {
+            setAuthorImageSrc(cached);
+          }
+          return;
+        }
+
+        const profile = await api.getProfile(identifier);
+        const profilePicture = getProfileImage(profile);
         const resolved = profilePicture ? await resolveS3ImageUrl(profilePicture) : '';
-        profileImageCache.set(ownerId, resolved || '');
-        if (isMounted) {
-          setAuthorImageSrc(resolved || '');
+
+        profileImageCache.set(cacheKey, resolved || '');
+
+        if (resolved) {
+          if (ownerId) {
+            profileImageCache.set(String(ownerId), resolved);
+          }
+          if (ownerUsername) {
+            profileImageCache.set(String(ownerUsername), resolved);
+          }
+          if (isMounted) {
+            setAuthorImageSrc(resolved);
+          }
+          return;
         }
-      } catch {
-        profileImageCache.set(ownerId, '');
-        if (isMounted) {
-          setAuthorImageSrc('');
-        }
+      }
+
+      if (ownerId) {
+        profileImageCache.set(String(ownerId), '');
+      }
+      if (ownerUsername) {
+        profileImageCache.set(String(ownerUsername), '');
+      }
+      if (isMounted) {
+        setAuthorImageSrc('');
       }
     };
 
@@ -125,11 +160,17 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
     post?.ownerID,
     post?.authorId,
     post?.authorID,
+    post?.username,
+    post?.userName,
+    post?.ownerUsername,
+    post?.author,
     post?.profilePicture,
     post?.profilePic,
     post?.userProfilePicture,
     post?.avatar,
-    post?.avatarUrl
+    post?.avatarUrl,
+    user?.userId,
+    user?.username
   ]);
 
   useEffect(() => {
