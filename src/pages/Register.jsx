@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
 
 const PENDING_PROFILE_KEY = 'pendingProfileSetup';
 
@@ -34,9 +35,15 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Register</h2>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="max-w-md w-full glass-card surface-glow rounded-xl p-8"
+      >
+        <h2 className="text-3xl font-bold text-center mb-1 text-gray-800">Create Account</h2>
+        <p className="text-center text-sm text-slate-600 mb-6">Build your profile and join the feed.</p>
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -44,7 +51,7 @@ export default function Register() {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+            className="w-full px-4 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 text-gray-800 bg-white/85"
             required
           />
           <input
@@ -52,7 +59,7 @@ export default function Register() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+            className="w-full px-4 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 text-gray-800 bg-white/85"
             required
           />
           <input
@@ -60,7 +67,7 @@ export default function Register() {
             placeholder="Password (min 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+            className="w-full px-4 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 text-gray-800 bg-white/85"
             required
             minLength={8}
           />
@@ -69,7 +76,7 @@ export default function Register() {
             placeholder="Short bio (optional)"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+            className="w-full px-4 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 text-gray-800 bg-white/85"
             maxLength={160}
           />
           <input
@@ -77,16 +84,16 @@ export default function Register() {
             placeholder="Profile picture URL (optional)"
             value={profilePicture}
             onChange={(e) => setProfilePicture(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+            className="w-full px-4 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 text-gray-800 bg-white/85"
           />
-          <button className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">
+          <button className="w-full bg-gradient-to-r from-sky-500 to-emerald-500 text-white py-2 rounded-lg hover:opacity-95 transition">
             Register
           </button>
         </form>
         <p className="text-center mt-4 text-sm text-gray-600">
-          Already have an account? <Link to="/login" className="text-blue-500 hover:underline">Login</Link>
+          Already have an account? <Link to="/login" className="text-sky-600 hover:underline">Login</Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Heart, MessageCircle, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { resolveS3ImageUrl } from '../utils/storage';
+import { motion } from 'framer-motion';
 
 const profileImageCache = new Map();
 
@@ -373,12 +374,16 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
+    <motion.article
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.18 }}
+      className="glass-card rounded-xl p-4 border border-white/80"
+    >
       <div className="flex items-center gap-3 mb-3">
         {authorImageSrc ? (
-          <img src={authorImageSrc} alt={post.username || 'User'} className="w-10 h-10 rounded-full object-cover" />
+          <img src={authorImageSrc} alt={post.username || 'User'} className="w-10 h-10 rounded-full object-cover ring-2 ring-sky-100" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-100 to-emerald-100 flex items-center justify-center">
             <User size={18} className="text-gray-500" />
           </div>
         )}
@@ -411,7 +416,7 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
           <textarea
             value={postEditContent}
             onChange={(e) => setPostEditContent(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none bg-white/85"
             rows="3"
           />
           <div className="flex items-center gap-2">
@@ -419,7 +424,7 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
               type="button"
               onClick={handleSavePostEdit}
               disabled={postSaving}
-              className="px-3 py-1 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-60"
+              className="px-3 py-1 text-white bg-gradient-to-r from-sky-500 to-cyan-500 rounded-md hover:opacity-95 disabled:opacity-60 transition"
             >
               {postSaving ? 'Saving...' : 'Save'}
             </button>
@@ -434,15 +439,15 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
           </div>
         </div>
       ) : (
-        <p className="mb-3">{postContent}</p>
+        <p className="mb-3 text-slate-800">{postContent}</p>
       )}
-      {imageSrc && <img src={imageSrc} alt="Post" className="w-full rounded-lg mb-3" />}
+      {imageSrc && <img src={imageSrc} alt="Post" className="w-full rounded-lg mb-3 border border-sky-100" />}
       <div className="flex items-center gap-4 mb-3">
-        <button onClick={handleLike} disabled={liking} className={`flex items-center gap-1 ${liked ? 'text-red-500' : ''} disabled:opacity-60`}>
+        <button onClick={handleLike} disabled={liking} className={`flex items-center gap-1 transition-colors ${liked ? 'text-rose-500' : 'text-slate-600'} disabled:opacity-60`}>
           <Heart size={20} fill={liked ? 'currentColor' : 'none'} />
           <span>{likes}</span>
         </button>
-        <button className="flex items-center gap-1">
+        <button className="flex items-center gap-1 text-slate-600">
           <MessageCircle size={20} />
           <span>{comments.length}</span>
         </button>
@@ -453,9 +458,9 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
           placeholder="Add a comment..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-3 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/80"
         />
-        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        <button type="submit" className="px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 transition">
           {commentSubmitting ? 'Posting...' : 'Post'}
         </button>
       </form>
@@ -466,7 +471,7 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
             const isEditing = editingCommentKey === commentKey;
             const isOwnComment = (c?.userId && c.userId === user?.userId) || c?.username === user?.username;
             return (
-              <div key={commentKey} className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+              <div key={commentKey} className="text-sm bg-white/75 border border-sky-100 rounded-lg px-3 py-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <p>
@@ -479,12 +484,12 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
                           type="text"
                           value={editingCommentText}
                           onChange={(e) => setEditingCommentText(e.target.value)}
-                          className="flex-1 px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-2 py-1 border border-sky-100 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-400"
                         />
                         <button
                           type="button"
                           onClick={() => handleSaveEdit(c, commentKey)}
-                          className="px-3 py-1 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+                          className="px-3 py-1 text-white bg-gradient-to-r from-sky-500 to-cyan-500 rounded-md hover:opacity-95 transition"
                         >
                           Save
                         </button>
@@ -523,6 +528,6 @@ export default function Post({ post, onPostUpdated, onPostDeleted }) {
           })}
         </div>
       )}
-    </div>
+    </motion.article>
   );
 }

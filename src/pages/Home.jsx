@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Post from '../components/Post';
 import CreatePost from '../components/CreatePost';
 import Navbar from '../components/Navbar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const FEED_MODE_KEY_PREFIX = 'socialapp:home-feed-mode';
 
@@ -124,17 +125,17 @@ export default function Home() {
   }, [feedMode, posts, user?.userId, user?.username]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar />
       <div className="max-w-2xl mx-auto py-8 px-4">
         {profileNeedsSetup && !dismissProfilePrompt && user?.userId && (
-          <div className="bg-white rounded-lg shadow-md p-4 mb-4 border border-blue-100">
+          <div className="glass-card rounded-xl p-4 mb-4 border border-sky-100 surface-glow float-in">
             <p className="text-gray-800 font-medium">Complete your profile to stand out.</p>
             <p className="text-sm text-gray-600 mt-1">Add a bio and profile picture so your portfolio app looks production-ready.</p>
             <div className="flex items-center gap-3 mt-3">
               <Link
                 to={`/profile/${user.userId}?edit=1`}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 transition"
               >
                 Complete Profile
               </Link>
@@ -150,14 +151,19 @@ export default function Home() {
         )}
         <CreatePost onPostCreated={handleNewPost} />
 
-        <div className="mt-4 bg-white rounded-lg shadow-sm p-1 inline-flex gap-1 border border-gray-200">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, duration: 0.3 }}
+          className="mt-4 glass-card rounded-xl p-1.5 inline-flex gap-1.5 border border-white/70"
+        >
           <button
             type="button"
             onClick={() => setFeedMode('global')}
             className={`px-4 py-2 text-sm rounded-md transition ${
               feedMode === 'global'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/80'
             }`}
           >
             Global Feed
@@ -167,28 +173,38 @@ export default function Home() {
             onClick={() => setFeedMode('mine')}
             className={`px-4 py-2 text-sm rounded-md transition ${
               feedMode === 'mine'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/80'
             }`}
           >
             My Posts
           </button>
-        </div>
+        </motion.div>
 
         {loading ? (
           <p className="text-center mt-8">Loading...</p>
         ) : (
           <div className="space-y-4 mt-6">
-            {visiblePosts.map((post) => (
-              <Post
-                key={post.postId}
-                post={post}
-                onPostUpdated={handlePostUpdated}
-                onPostDeleted={handlePostDeleted}
-              />
-            ))}
+            <AnimatePresence mode="popLayout">
+              {visiblePosts.map((post, index) => (
+                <motion.div
+                  key={post.postId}
+                  layout
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.24, delay: Math.min(index * 0.03, 0.2) }}
+                >
+                  <Post
+                    post={post}
+                    onPostUpdated={handlePostUpdated}
+                    onPostDeleted={handlePostDeleted}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
             {visiblePosts.length === 0 && (
-              <p className="text-center text-gray-500 py-8">
+              <p className="text-center text-gray-500 py-8 glass-card rounded-xl border border-white/70">
                 {feedMode === 'mine'
                   ? 'No posts yet for this account. Create your first post.'
                   : 'No posts available yet. Be the first to post.'}

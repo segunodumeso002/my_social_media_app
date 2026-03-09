@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { api } from '../services/api';
 import { emitNotificationsRefresh } from '../utils/notifications';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const formatTime = (value) => {
   if (!value) return 'Just now';
@@ -84,16 +85,21 @@ export default function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar />
       <div className="max-w-2xl mx-auto py-8 px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="glass-card rounded-xl p-6 border border-white/80"
+        >
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
             <button
               onClick={handleMarkAllRead}
               disabled={markingAll || notifications.length === 0 || unreadCount === 0}
-              className="text-sm px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+              className="text-sm px-3 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 disabled:opacity-50 transition"
             >
               {markingAll ? 'Updating...' : 'Mark all as read'}
             </button>
@@ -105,30 +111,37 @@ export default function Notifications() {
             <p className="text-gray-600">No notifications yet. Likes and comments will appear here.</p>
           ) : (
             <div className="space-y-3">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.notificationId || `${notification.type}-${notification.createdAt}`}
-                  className={`p-4 rounded-lg border ${notification.isRead ? 'border-gray-200 bg-white' : 'border-blue-200 bg-blue-50'}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-gray-900">{notification.message}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatTime(notification.createdAt)}</p>
+              <AnimatePresence mode="popLayout">
+                {notifications.map((notification, index) => (
+                  <motion.div
+                    key={notification.notificationId || `${notification.type}-${notification.createdAt}`}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.22, delay: Math.min(index * 0.025, 0.15) }}
+                    className={`p-4 rounded-lg border ${notification.isRead ? 'border-slate-200 bg-white/85' : 'border-sky-200 bg-sky-50/80'}`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-gray-900">{notification.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatTime(notification.createdAt)}</p>
+                      </div>
+                      {!notification.isRead && (
+                        <button
+                          onClick={() => handleMarkRead(notification.notificationId)}
+                          className="text-sm text-sky-600 hover:text-sky-700"
+                        >
+                          Mark read
+                        </button>
+                      )}
                     </div>
-                    {!notification.isRead && (
-                      <button
-                        onClick={() => handleMarkRead(notification.notificationId)}
-                        className="text-sm text-blue-600 hover:text-blue-700"
-                      >
-                        Mark read
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

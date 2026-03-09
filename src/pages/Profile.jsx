@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import { User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { resolveS3ImageUrl, uploadImageToS3 } from '../utils/storage';
+import { motion } from 'framer-motion';
 
 export default function Profile() {
   const { userId } = useParams();
@@ -166,10 +167,10 @@ export default function Profile() {
 
   if (notFound || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <Navbar />
         <div className="max-w-2xl mx-auto py-8 px-4">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="glass-card rounded-xl p-6 border border-white/80">
             <p className="text-gray-600">Profile not found.</p>
           </div>
         </div>
@@ -178,15 +179,20 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar />
       <div className="max-w-2xl mx-auto py-8 px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="glass-card rounded-xl p-6 border border-white/80"
+        >
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             {profileImageSrc ? (
-              <img src={profileImageSrc} alt={profile.username} className="w-20 h-20 rounded-full shrink-0 object-cover" />
+              <img src={profileImageSrc} alt={profile.username} className="w-20 h-20 rounded-full shrink-0 object-cover ring-2 ring-sky-100" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-100 to-emerald-100 flex items-center justify-center shrink-0">
                 <User size={40} />
               </div>
             )}
@@ -197,7 +203,7 @@ export default function Profile() {
                   <textarea
                     value={bioInput}
                     onChange={(e) => setBioInput(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full px-3 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none bg-white/85"
                     rows="3"
                     maxLength={160}
                     placeholder="Write your bio"
@@ -206,10 +212,10 @@ export default function Profile() {
                     type="url"
                     value={profilePictureInput}
                     onChange={(e) => setProfilePictureInput(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white/85"
                     placeholder="Paste profile picture URL"
                   />
-                  <label className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 cursor-pointer">
+                  <label className="inline-flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700 cursor-pointer">
                     <span>{pictureUploading ? 'Uploading image...' : 'Upload from device'}</span>
                     <input
                       type="file"
@@ -239,7 +245,7 @@ export default function Profile() {
                   <button
                     onClick={handleSaveProfile}
                     disabled={saving || pictureUploading}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex-1 sm:flex-none"
+                    className="px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 disabled:opacity-50 flex-1 sm:flex-none transition"
                   >
                     {saving ? 'Saving...' : 'Save'}
                   </button>
@@ -247,7 +253,7 @@ export default function Profile() {
               ) : (
                 <button
                   onClick={() => setEditing(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full sm:w-auto"
+                  className="px-4 py-2 bg-gradient-to-r from-sky-500 to-cyan-500 text-white rounded-lg hover:opacity-95 w-full sm:w-auto transition"
                 >
                   Edit Profile
                 </button>
@@ -256,13 +262,13 @@ export default function Profile() {
               <button
                 onClick={handleFollow}
                 disabled={followUpdating}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-60 w-full sm:w-auto"
+                className="px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 disabled:opacity-60 w-full sm:w-auto transition"
               >
                 {followUpdating ? 'Updating...' : (profile.isFollowing ? 'Unfollow' : 'Follow')}
               </button>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
