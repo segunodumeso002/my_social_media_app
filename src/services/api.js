@@ -1,10 +1,30 @@
 import { get, post, put, del } from 'aws-amplify/api';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { amplifyConfig } from '../config/aws-config';
 import { extractNotificationList, normalizeNotification } from '../utils/notificationAdapter';
 import { warnNotificationContractMismatch } from '../utils/notificationContract';
 
 const API_NAME = 'SocialMediaAPI';
 const NOTIFICATION_FAILURE_COOLDOWN_MS = 2 * 60 * 1000;
+
+// Fallback: read the Cognito idToken directly from localStorage when
+// fetchAuthSession throws due to Identity Pool credential exchange failure.
+// Amplify stores User Pool tokens with the key pattern:
+// CognitoIdentityServiceProvider.{clientId}.LastAuthUser  →  username
+// CognitoIdentityServiceProvider.{clientId}.{username}.idToken  →  ID token
+const getTokenFromAmplifyStorage = () => {
+  try {
+    const clientId = amplifyConfig?.Auth?.Cognito?.userPoolClientId;
+    if (!clientId) return null;
+    const lastUserKey = `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`;
+    const username = localStorage.getItem(lastUserKey);
+    if (!username) return null;
+    const idTokenKey = `CognitoIdentityServiceProvider.${clientId}.${username}.idToken`;
+    return localStorage.getItem(idTokenKey);
+  } catch {
+    return null;
+  }
+};
 
 let notificationsTemporarilyDisabledUntil = 0;
 
@@ -38,6 +58,13 @@ const getAuthHeaders = async () => {
       Authorization: token || ''
     };
   } catch (error) {
+    // fetchAuthSession() throws when the Cognito Identity Pool credential
+    // exchange fails, even though the User Pool ID token is still valid.
+    // Fall back to the token cached in localStorage by the Amplify SDK.
+    const storedToken = getTokenFromAmplifyStorage();
+    if (storedToken) {
+      return { Authorization: storedToken };
+    }
     console.error('Error getting auth token:', error);
     return {};
   }
