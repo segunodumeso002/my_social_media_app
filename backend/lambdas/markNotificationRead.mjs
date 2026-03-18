@@ -40,10 +40,11 @@ export const handler = async (event) => {
 
     const timestamp = parseInt(notificationId);
     if (isNaN(timestamp)) {
+      // Synthetic/fallback ID — no real DB record exists, treat as success
       return {
-        statusCode: 400,
+        statusCode: 200,
         headers: getCorsHeaders(event),
-        body: JSON.stringify({ message: "Invalid notification ID" })
+        body: JSON.stringify({ success: true })
       };
     }
 

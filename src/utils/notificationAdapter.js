@@ -49,6 +49,7 @@ export const normalizeNotification = (notification, index = 0) => {
     notification?.notificationId ||
     notification?.id ||
     notification?.pk ||
+    notification?.timestamp ||
     `${type}-${createdAt}-${index}`;
 
   const hasStatus = notification?.status !== undefined && notification?.status !== null;

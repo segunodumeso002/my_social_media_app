@@ -13,6 +13,7 @@ export default function Home() {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [feedMode, setFeedMode] = useState('global');
   const [profileNeedsSetup, setProfileNeedsSetup] = useState(false);
   const [dismissProfilePrompt, setDismissProfilePrompt] = useState(false);
@@ -70,11 +71,13 @@ export default function Home() {
 
   const loadPosts = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api.getPosts();
       setPosts(data);
     } catch (err) {
       console.error(err);
+      setError('Failed to load posts. Please check your connection and try again.');
     }
     setLoading(false);
   };
@@ -183,6 +186,17 @@ export default function Home() {
 
         {loading ? (
           <p className="text-center mt-8">Loading...</p>
+        ) : error ? (
+          <div className="text-center mt-8 glass-card rounded-xl p-6 border border-red-100">
+            <p className="text-red-600 mb-3">{error}</p>
+            <button
+              type="button"
+              onClick={loadPosts}
+              className="px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 transition"
+            >
+              Retry
+            </button>
+          </div>
         ) : (
           <div className="space-y-4 mt-6">
             <AnimatePresence mode="popLayout">

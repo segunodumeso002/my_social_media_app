@@ -12,12 +12,14 @@ export default function Register() {
   const [bio, setBio] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       await register(username, password, email);
       localStorage.setItem(
@@ -31,6 +33,8 @@ export default function Register() {
       navigate('/verify', { state: { username, email } });
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,8 +90,12 @@ export default function Register() {
             onChange={(e) => setProfilePicture(e.target.value)}
             className="w-full px-4 py-2 border border-sky-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 text-gray-800 bg-white/85"
           />
-          <button className="w-full bg-gradient-to-r from-sky-500 to-emerald-500 text-white py-2 rounded-lg hover:opacity-95 transition">
-            Register
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-sky-500 to-emerald-500 text-white py-2 rounded-lg hover:opacity-95 transition disabled:opacity-50"
+          >
+            {loading ? 'Creating account...' : 'Register'}
           </button>
         </form>
         <p className="text-center mt-4 text-sm text-gray-600">

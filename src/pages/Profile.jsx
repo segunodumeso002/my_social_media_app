@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -170,8 +170,14 @@ export default function Profile() {
       <div className="min-h-screen">
         <Navbar />
         <div className="max-w-2xl mx-auto py-8 px-4">
-          <div className="glass-card rounded-xl p-6 border border-white/80">
-            <p className="text-gray-600">Profile not found.</p>
+          <div className="glass-card rounded-xl p-6 border border-white/80 text-center">
+            <p className="text-gray-600 mb-4">Profile not found.</p>
+            <Link
+              to="/"
+              className="px-4 py-2 bg-gradient-to-r from-sky-500 to-emerald-500 text-white rounded-lg hover:opacity-95 transition"
+            >
+              Back to Home
+            </Link>
           </div>
         </div>
       </div>
