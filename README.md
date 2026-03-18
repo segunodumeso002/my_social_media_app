@@ -27,6 +27,16 @@ This project is built for portfolio and interview demonstration, with a React fr
 - Notifications page with unread count badge
 - Mark one/all notifications as read
 
+## Portfolio Impact
+- Built and deployed a complete cloud-backed social media app from scratch using React and AWS serverless services
+- Implemented end-to-end authenticated flows and social interactions (posts, comments, likes, follows, notifications)
+- Applied production debugging and hardening across frontend, API Gateway, Lambda, and Cognito integration
+
+## Production Debugging Highlights
+- Fixed API Gateway CORS mismatch on gateway error responses (`DEFAULT_4XX` and `DEFAULT_5XX`) for Netlify origin
+- Improved auth resilience by adding token fallback behavior when Identity Pool credential exchange fails
+- Corrected notification-read handling and redeployed the related Lambda with validated handler packaging
+
 ## Architecture Overview
 
 ### Frontend (`src/`)
